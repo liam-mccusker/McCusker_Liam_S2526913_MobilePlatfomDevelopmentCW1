@@ -39,10 +39,16 @@ public class SituationListFragment extends Fragment {
         recycler.addItemDecoration(
                 new DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL));
 
-        SituationAdapter adapter = new SituationAdapter(situation ->
-                Log.d("ListTest", "Clicked " + situation.getId()));
+        SituationAdapter adapter = new SituationAdapter(situation -> {
+            viewModel.selectSituation(situation);
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.fragmentContainer, new SituationDetailsFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
         recycler.setAdapter(adapter);
 
+        // Show the list and how many items are in it
         TextView countText = view.findViewById(R.id.listCount);
         viewModel.getVisibleSituations().observe(getViewLifecycleOwner(), list -> {
             adapter.setSituations(list);

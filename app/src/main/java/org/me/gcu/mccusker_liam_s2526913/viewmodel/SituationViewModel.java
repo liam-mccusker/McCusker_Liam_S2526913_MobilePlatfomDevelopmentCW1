@@ -24,6 +24,9 @@ public class SituationViewModel extends AndroidViewModel {
     // The list the screen actually shows, rebuilt whenever data or filter changes
     private final MediatorLiveData<List<Situation>> visibleSituations = new MediatorLiveData<>();
 
+    // The situation the user tapped, shown on the details screen
+    private final MutableLiveData<Situation> selectedSituation = new MutableLiveData<>();
+
     public SituationViewModel(@NonNull Application application) {
         super(application);
         repository = new SituationRepository(application);
@@ -56,6 +59,12 @@ public class SituationViewModel extends AndroidViewModel {
 
     public void setFilter(String value) {
         filter.setValue(value);
+    }
+
+    public LiveData<Situation> getSelectedSituation() { return selectedSituation; }
+
+    public void selectSituation(Situation situation) {
+        selectedSituation.setValue(situation);
     }
 
     public void refresh() {
