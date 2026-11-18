@@ -3,6 +3,7 @@ package org.me.gcu.mccusker_liam_s2526913.ui;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -42,7 +43,11 @@ public class SituationListFragment extends Fragment {
                 Log.d("ListTest", "Clicked " + situation.getId()));
         recycler.setAdapter(adapter);
 
-        viewModel.getVisibleSituations().observe(getViewLifecycleOwner(), adapter::setSituations);
+        TextView countText = view.findViewById(R.id.listCount);
+        viewModel.getVisibleSituations().observe(getViewLifecycleOwner(), list -> {
+            adapter.setSituations(list);
+            countText.setText(getString(R.string.list_count, list.size()));
+        });
 
         // The filter buttons: show the saved choice, then listen for changes
         MaterialButtonToggleGroup toggle = view.findViewById(R.id.filterToggle);

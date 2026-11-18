@@ -5,4 +5,5 @@
     <string name="filter_all">All</string>
     <string name="filter_incidents">Incidents</string>
     <string name="filter_roadworks">Roadworks</string>
+    <string name="list_count">Showing %1$d situations</string>
 </resources>
