@@ -10,7 +10,6 @@
 // Programme of Study   _________________
 //
 
-// UPDATE THE PACKAGE NAME to include your Student Identifier
 package org.me.gcu.mccusker_liam_s2526913;
 
 import android.os.Bundle;
@@ -38,6 +37,10 @@ import java.net.URL;
 import java.net.HttpURLConnection;
 import java.util.Base64;
 
+import org.me.gcu.mccusker_liam_s2526913.data.SituationParser;
+import org.me.gcu.mccusker_liam_s2526913.model.Situation;
+import java.util.ArrayList;
+
 
 public class MainActivity extends AppCompatActivity implements OnClickListener {
     private TextView rawDataDisplay;
@@ -62,7 +65,13 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         rawDataDisplay = (TextView)findViewById(R.id.rawDataDisplay);
         startButton = (Button)findViewById(R.id.startButton);
         startButton.setOnClickListener(this);
-        rawDataDisplay.setText(loadFromAssets("unplannedContentExample.xml"));
+        SituationParser situationParser = new SituationParser();
+        ArrayList<Situation> list = situationParser.parse(
+                loadFromAssets("roadworksContentExample.xml"), "roadworks");
+        Log.d("ParserTest", "Parsed " + list.size() + " situations");
+        if (!list.isEmpty()) {
+            Log.d("ParserTest", list.get(0).toString());
+        }
 
         // More Code goes here
 
