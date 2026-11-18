@@ -37,9 +37,9 @@ import java.net.URL;
 import java.net.HttpURLConnection;
 import java.util.Base64;
 
-import org.me.gcu.mccusker_liam_s2526913.data.SituationParser;
-import org.me.gcu.mccusker_liam_s2526913.model.Situation;
-import java.util.ArrayList;
+
+import androidx.lifecycle.ViewModelProvider;
+import org.me.gcu.mccusker_liam_s2526913.viewmodel.SituationViewModel;
 
 
 public class MainActivity extends AppCompatActivity implements OnClickListener {
@@ -65,13 +65,16 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         rawDataDisplay = (TextView)findViewById(R.id.rawDataDisplay);
         startButton = (Button)findViewById(R.id.startButton);
         startButton.setOnClickListener(this);
-        SituationParser situationParser = new SituationParser();
-        ArrayList<Situation> list = situationParser.parse(
-                loadFromAssets("unplannedContentExample1.xml"), "incident");
-        Log.d("ParserTest", "Parsed " + list.size() + " situations");
-        if (!list.isEmpty()) {
-            Log.d("ParserTest", list.get(0).toString());
-        }
+
+        // Get the ViewModel and watch its data
+        SituationViewModel viewModel = new ViewModelProvider(this).get(SituationViewModel.class);
+
+        viewModel.getIncidents().observe(this, list ->
+                Log.d("ParserTest", "Incidents: " + list.size()));
+        viewModel.getRoadworks().observe(this, list ->
+                Log.d("ParserTest", "Roadworks: " + list.size()));
+        viewModel.getStatus().observe(this, text ->
+                rawDataDisplay.setText(text));
 
         // More Code goes here
 
@@ -158,19 +161,4 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         }
 
     }
-
-    private String loadFromAssets(String fileName) {
-        StringBuilder sb = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(getAssets().open(fileName)))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                sb.append(line);
-            }
-        } catch (IOException e) {
-            Log.e("Assets", "Could not read " + fileName, e);
-        }
-        return sb.toString();
-    }
-
 }
