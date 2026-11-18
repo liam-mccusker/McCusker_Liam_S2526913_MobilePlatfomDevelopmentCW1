@@ -162,6 +162,16 @@ public class Situation {
         this.urgentRoadworks = urgentRoadworks;
     }
 
+    // Turns e.g. "roadClosed" into "Road closed" for display
+    public String getDisplayType() {
+        String raw = (subType != null) ? subType : category;
+        if (raw == null || raw.isEmpty()) {
+            return "Unknown";
+        }
+        String spaced = raw.replaceAll("([A-Z])", " $1").toLowerCase();
+        return Character.toUpperCase(spaced.charAt(0)) + spaced.substring(1);
+    }
+
     @Override
     public String toString() {
         return "Situation{" +

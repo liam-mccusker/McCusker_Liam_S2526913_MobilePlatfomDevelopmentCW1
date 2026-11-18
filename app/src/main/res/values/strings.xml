@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">McCusker_Liam_S2526913</string>
+
+    <string name="situation_icon">Situation type icon</string>
+    <string name="filter_all">All</string>
+    <string name="filter_incidents">Incidents</string>
+    <string name="filter_roadworks">Roadworks</string>
 </resources>
