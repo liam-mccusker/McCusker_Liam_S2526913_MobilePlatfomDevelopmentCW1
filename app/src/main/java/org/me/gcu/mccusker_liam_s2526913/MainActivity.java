@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener {
         startButton.setOnClickListener(this);
         SituationParser situationParser = new SituationParser();
         ArrayList<Situation> list = situationParser.parse(
-                loadFromAssets("roadworksContentExample.xml"), "roadworks");
+                loadFromAssets("unplannedContentExample.xml"), "incident");
         Log.d("ParserTest", "Parsed " + list.size() + " situations");
         if (!list.isEmpty()) {
             Log.d("ParserTest", list.get(0).toString());
