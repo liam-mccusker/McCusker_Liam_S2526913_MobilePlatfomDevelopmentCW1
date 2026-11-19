@@ -23,4 +23,11 @@
 
     <string name="show_map">Show map</string>
     <string name="map_count">%1$d situations on map · tap a marker for details</string>
+
+    <string name="app_title">Scottish Road Situations</string>
+    <string name="legend_title">Roadworks delays</string>
+    <string name="legend_none">No delay info</string>
+    <string name="legend_short">Delays</string>
+    <string name="legend_long">Long delays</string>
+    <string name="legend_very_long">Very long delays</string>
 </resources>
