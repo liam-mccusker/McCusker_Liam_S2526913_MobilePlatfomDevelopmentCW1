@@ -4,6 +4,7 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -38,12 +39,14 @@ public class SituationDetailsFragment extends Fragment {
         TextView category = view.findViewById(R.id.detailCategory);
         TextView description = view.findViewById(R.id.detailDescription);
         rows = view.findViewById(R.id.detailRows);
+        ImageView icon = view.findViewById(R.id.detailIcon);
 
         viewModel.getSelectedSituation().observe(getViewLifecycleOwner(), s -> {
             if (s == null) {
                 return;
             }
             type.setText(s.getDisplayType());
+            icon.setImageResource(SituationStyle.iconFor(s));
             category.setText("roadworks".equals(s.getCategory()) ? "Roadworks" : "Incident");
             description.setText(s.getDescription());
 

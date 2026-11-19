@@ -2,4 +2,9 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <color name="delay_none">#757575</color>
+    <color name="delay_short">#F57F17</color>
+    <color name="delay_long">#E65100</color>
+    <color name="delay_very_long">#B71C1C</color>
 </resources>
