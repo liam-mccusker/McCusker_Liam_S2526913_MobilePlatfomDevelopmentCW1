@@ -17,6 +17,14 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="${MAPS_API_KEY}" />
+
+        <meta-data
+            android:name="org.me.gcu.mccusker_liam_s2526913.TS_CLIENT_ID"
+            android:value="${TS_CLIENT_ID}" />
+        <meta-data
+            android:name="org.me.gcu.mccusker_liam_s2526913.TS_CLIENT_KEY"
+            android:value="${TS_CLIENT_KEY}" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
