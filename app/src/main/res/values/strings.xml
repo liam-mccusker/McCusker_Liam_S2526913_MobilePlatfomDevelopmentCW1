@@ -20,4 +20,7 @@
     </string-array>
 
     <string name="refresh">Refresh data</string>
+
+    <string name="show_map">Show map</string>
+    <string name="map_count">%1$d situations on map · tap a marker for details</string>
 </resources>

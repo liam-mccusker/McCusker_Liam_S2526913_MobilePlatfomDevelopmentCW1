@@ -21,9 +21,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import org.me.gcu.mccusker_liam_s2526913.ui.SituationListFragment;
+import org.me.gcu.mccusker_liam_s2526913.ui.SituationMapFragment;
 import org.me.gcu.mccusker_liam_s2526913.viewmodel.SituationViewModel;
 
 public class MainActivity extends AppCompatActivity {
@@ -46,6 +48,17 @@ public class MainActivity extends AppCompatActivity {
 
         ImageButton refreshButton = findViewById(R.id.refreshButton);
         refreshButton.setOnClickListener(v -> viewModel.refresh());
+
+        ImageButton mapButton = findViewById(R.id.mapButton);
+        mapButton.setOnClickListener(v -> {
+            Fragment current = getSupportFragmentManager().findFragmentById(R.id.fragmentContainer);
+            if (!(current instanceof SituationMapFragment)) {   // don't open the map twice
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragmentContainer, new SituationMapFragment())
+                        .addToBackStack(null)
+                        .commit();
+            }
+        });
 
         // Add the list only on first start; after rotation Android restores it automatically
         if (savedInstanceState == null) {

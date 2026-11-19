@@ -7,4 +7,6 @@
     <color name="delay_short">#F57F17</color>
     <color name="delay_long">#E65100</color>
     <color name="delay_very_long">#B71C1C</color>
+
+    <color name="incident_red">#C62828</color>
 </resources>

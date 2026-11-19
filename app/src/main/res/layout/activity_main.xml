@@ -20,6 +20,14 @@
             android:textSize="14sp" />
 
         <ImageButton
+            android:id="@+id/mapButton"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/show_map"
+            android:src="@drawable/ic_map" />
+
+        <ImageButton
             android:id="@+id/refreshButton"
             android:layout_width="48dp"
             android:layout_height="48dp"
