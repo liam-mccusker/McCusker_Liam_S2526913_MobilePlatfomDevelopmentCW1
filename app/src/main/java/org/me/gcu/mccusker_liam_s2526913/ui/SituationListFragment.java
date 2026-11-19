@@ -1,8 +1,13 @@
 package org.me.gcu.mccusker_liam_s2526913.ui;
 
 import android.os.Bundle;
-import android.util.Log;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -20,6 +25,9 @@ import org.me.gcu.mccusker_liam_s2526913.viewmodel.SituationViewModel;
 
 public class SituationListFragment extends Fragment {
 
+    // Matches the order of the "distance_options" list in strings.xml
+    private static final int[] DISTANCE_MILES = {0, 1, 5, 10, 25, 50};
+
     private SituationViewModel viewModel;
 
     public SituationListFragment() {
@@ -33,7 +41,13 @@ public class SituationListFragment extends Fragment {
         // Share the Activity's ViewModel, so the fragment sees the same data
         viewModel = new ViewModelProvider(requireActivity()).get(SituationViewModel.class);
 
-        // The list
+        setUpList(view);
+        setUpFilterButtons(view);
+        setUpRoadSearch(view);
+        setUpDistanceSpinner(view);
+    }
+
+    private void setUpList(View view) {
         RecyclerView recycler = view.findViewById(R.id.situationRecycler);
         recycler.setLayoutManager(new LinearLayoutManager(requireContext()));
         recycler.addItemDecoration(
@@ -48,14 +62,23 @@ public class SituationListFragment extends Fragment {
         });
         recycler.setAdapter(adapter);
 
-        // Show the list and how many items are in it
         TextView countText = view.findViewById(R.id.listCount);
         viewModel.getVisibleSituations().observe(getViewLifecycleOwner(), list -> {
-            adapter.setSituations(list);
-            countText.setText(getString(R.string.list_count, list.size()));
-        });
+            Integer km = viewModel.getMaxDistanceMiles().getValue();
+            boolean nearSearch = (km != null && km > 0);
 
-        // The filter buttons: show the saved choice, then listen for changes
+            adapter.setShowDistance(nearSearch);
+            adapter.setSituations(list);
+
+            if (nearSearch) {
+                countText.setText(getString(R.string.list_count_near, list.size(), km));
+            } else {
+                countText.setText(getString(R.string.list_count, list.size()));
+            }
+        });
+    }
+
+    private void setUpFilterButtons(View view) {
         MaterialButtonToggleGroup toggle = view.findViewById(R.id.filterToggle);
         String current = viewModel.getFilter().getValue();
         if ("incident".equals(current)) {
@@ -74,6 +97,51 @@ public class SituationListFragment extends Fragment {
                 viewModel.setFilter("roadworks");
             } else {
                 viewModel.setFilter("all");
+            }
+        });
+    }
+
+    private void setUpRoadSearch(View view) {
+        EditText search = view.findViewById(R.id.roadSearch);
+        search.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                viewModel.setRoadQuery(s.toString());   // list updates as the user types
+            }
+        });
+    }
+
+    private void setUpDistanceSpinner(View view) {
+        Spinner spinner = view.findViewById(R.id.distanceSpinner);
+        ArrayAdapter<CharSequence> options = ArrayAdapter.createFromResource(
+                requireContext(), R.array.distance_options, android.R.layout.simple_spinner_item);
+        options.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        spinner.setAdapter(options);
+
+        // Show the saved choice (e.g. after rotation or coming back from details)
+        Integer currentKm = viewModel.getMaxDistanceMiles().getValue();
+        for (int i = 0; i < DISTANCE_MILES.length; i++) {
+            if (currentKm != null && DISTANCE_MILES[i] == currentKm) {
+                spinner.setSelection(i);
+            }
+        }
+
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View v, int position, long id) {
+                viewModel.setMaxDistanceMiles(DISTANCE_MILES[position]);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
             }
         });
     }

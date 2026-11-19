@@ -6,4 +6,16 @@
     <string name="filter_incidents">Incidents</string>
     <string name="filter_roadworks">Roadworks</string>
     <string name="list_count">Showing %1$d situations</string>
+
+    <string name="road_search_hint">Search road, e.g. M8</string>
+    <string name="list_count_near">Showing %1$d situations within %2$d mi of GCU campus</string>
+
+    <string-array name="distance_options">
+        <item>Any distance</item>
+        <item>Within 1 mile</item>
+        <item>Within 5 miles</item>
+        <item>Within 10 miles</item>
+        <item>Within 25 miles</item>
+        <item>Within 50 miles</item>
+    </string-array>
 </resources>
