@@ -13,6 +13,7 @@
 package org.me.gcu.mccusker_liam_s2526913;
 
 import android.os.Bundle;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -42,6 +43,9 @@ public class MainActivity extends AppCompatActivity {
         TextView statusText = findViewById(R.id.statusText);
         SituationViewModel viewModel = new ViewModelProvider(this).get(SituationViewModel.class);
         viewModel.getStatus().observe(this, statusText::setText);
+
+        ImageButton refreshButton = findViewById(R.id.refreshButton);
+        refreshButton.setOnClickListener(v -> viewModel.refresh());
 
         // Add the list only on first start; after rotation Android restores it automatically
         if (savedInstanceState == null) {

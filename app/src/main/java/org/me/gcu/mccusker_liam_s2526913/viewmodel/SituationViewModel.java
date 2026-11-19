@@ -15,6 +15,9 @@ import org.me.gcu.mccusker_liam_s2526913.model.Situation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 public class SituationViewModel extends AndroidViewModel {
@@ -23,7 +26,13 @@ public class SituationViewModel extends AndroidViewModel {
     public static final double HOME_LAT = 55.8666;
     public static final double HOME_LON = -4.2504;
 
+    // How often the data refreshes automatically.
+    // Hourly for normal use; set to 1 temporarily to demonstrate it.
+    private static final long UPDATE_INTERVAL_MINUTES = 1;
+
     private final SituationRepository repository;
+    private final ScheduledExecutorService scheduler =
+            Executors.newSingleThreadScheduledExecutor();
 
     private final MutableLiveData<String> filter = new MutableLiveData<>("all");   // all / incident / roadworks
     private final MutableLiveData<String> roadQuery = new MutableLiveData<>("");
@@ -43,13 +52,15 @@ public class SituationViewModel extends AndroidViewModel {
         visibleSituations.addSource(roadQuery, v -> updateVisible());
         visibleSituations.addSource(maxDistanceMiles, v -> updateVisible());
 
-        repository.refresh();   // load data when the app starts
+        // Load now (delay 0), then repeat every UPDATE_INTERVAL_MINUTES
+        scheduler.scheduleWithFixedDelay(repository::refresh,
+                0, UPDATE_INTERVAL_MINUTES, TimeUnit.MINUTES);
     }
 
     private void updateVisible() {
         String f = filter.getValue();
         String query = (roadQuery.getValue() == null) ? "" : roadQuery.getValue().trim();
-        int maxKm = (maxDistanceMiles.getValue() == null) ? 0 : maxDistanceMiles.getValue();
+        int maxMiles = (maxDistanceMiles.getValue() == null) ? 0 : maxDistanceMiles.getValue();
 
         // 1. Category filter
         List<Situation> candidates = new ArrayList<>();
@@ -73,9 +84,9 @@ public class SituationViewModel extends AndroidViewModel {
             if (!matchesRoad(s, query, wordPattern)) {
                 continue;
             }
-            if (maxKm > 0) {
-                double km = DistanceUtils.distanceMiles(s, HOME_LAT, HOME_LON);
-                if (km < 0 || km > maxKm) {
+            if (maxMiles > 0) {
+                double miles = DistanceUtils.distanceMiles(s, HOME_LAT, HOME_LON);
+                if (miles < 0 || miles > maxMiles) {
                     continue;
                 }
             }
@@ -83,7 +94,7 @@ public class SituationViewModel extends AndroidViewModel {
         }
 
         // 3. When searching by distance, show the nearest first
-        if (maxKm > 0) {
+        if (maxMiles > 0) {
             result.sort((a, b) -> Double.compare(
                     DistanceUtils.distanceMiles(a, HOME_LAT, HOME_LON),
                     DistanceUtils.distanceMiles(b, HOME_LAT, HOME_LON)));
@@ -122,7 +133,7 @@ public class SituationViewModel extends AndroidViewModel {
 
     public void setFilter(String value) { filter.setValue(value); }
     public void setRoadQuery(String value) { roadQuery.setValue(value); }
-    public void setMaxDistanceMiles(int km) { maxDistanceMiles.setValue(km); }
+    public void setMaxDistanceMiles(int miles) { maxDistanceMiles.setValue(miles); }
     public void selectSituation(Situation situation) { selectedSituation.setValue(situation); }
 
     public void refresh() {
@@ -132,6 +143,7 @@ public class SituationViewModel extends AndroidViewModel {
     @Override
     protected void onCleared() {
         super.onCleared();
+        scheduler.shutdownNow();
         repository.shutdown();
     }
 }

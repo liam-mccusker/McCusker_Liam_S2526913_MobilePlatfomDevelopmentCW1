@@ -18,4 +18,6 @@
         <item>Within 25 miles</item>
         <item>Within 50 miles</item>
     </string-array>
+
+    <string name="refresh">Refresh data</string>
 </resources>
