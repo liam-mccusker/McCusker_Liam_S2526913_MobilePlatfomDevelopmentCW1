@@ -29,8 +29,12 @@ public final class SituationStyle {
             return R.drawable.ic_roadworks;
         }
 
-        // Incidents
-        if ("roadClosed".equals(s.getSubType()) || "0".equals(s.getNumberOfOperationalLanes())) {
+        // Incidents.
+        // 0 open lanes only reliably means "closed" on lane management records;
+        // other records (e.g. a fuel notice) can report 0 lanes without the road being closed
+        boolean laneManagement = "RoadOrCarriagewayOrLaneManagement".equals(s.getRecordType());
+        if ("roadClosed".equals(s.getSubType())
+                || (laneManagement && "0".equals(s.getNumberOfOperationalLanes()))) {
             return R.drawable.ic_incident_closed;
         }
         if (s.getNumberOfLanesRestricted() != null) {

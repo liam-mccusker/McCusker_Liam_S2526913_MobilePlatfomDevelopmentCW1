@@ -9,8 +9,23 @@ import org.xmlpull.v1.XmlPullParserFactory;
 
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 public class SituationParser {
+
+    // DATEX II puts the specific type of each kind of record in a different tag
+    // (e.g. GeneralObstruction -> obstructionType, Accident -> accidentType).
+    // Any of these found inside a record is stored as the situation's sub-type.
+    private static final Set<String> SUB_TYPE_TAGS = new HashSet<>(Arrays.asList(
+            "roadMaintenanceType", "abnormalTrafficType", "roadOrCarriagewayOrLaneManagementType",
+            "accidentType", "obstructionType", "vehicleObstructionType",
+            "environmentalObstructionType", "animalPresenceType", "infrastructureDamageType",
+            "poorEnvironmentType", "nonWeatherRelatedRoadConditionType",
+            "weatherRelatedRoadConditionType", "roadsideServiceDisruptionType",
+            "disturbanceActivityType", "publicEventType", "authorityOperationType",
+            "constructionWorkType", "equipmentOrSystemFaultType", "transitServiceType"));
 
     public ArrayList<Situation> parse(String xml, String category) {
         ArrayList<Situation> situations = new ArrayList<>();
@@ -54,16 +69,14 @@ public class SituationParser {
                         current.setComplianceOption(parser.nextText());
                     } else if (current != null && tag.equals("urgentRoadworks")) {
                         current.setUrgentRoadworks(parser.nextText());
-                    } else if (current != null && (tag.equals("roadMaintenanceType")
-                            || tag.equals("abnormalTrafficType")
-                            || tag.equals("roadOrCarriagewayOrLaneManagementType"))) {
+                    } else if (current != null && SUB_TYPE_TAGS.contains(tag)) {
                         current.setSubType(parser.nextText());
 
-                        // ---- Round 3: description ----
+                        // ---- Description ----
                     } else if (current != null && tag.equals("comment")) {
                         inComment = true;
 
-                        // ---- Round 3: from / to points ----
+                        // ---- From / to points ----
                     } else if (current != null && (tag.equals("from") || tag.equals("to"))) {
                         currentPoint = new LocationPoint();
                         if (tag.equals("from")) {
@@ -76,7 +89,7 @@ public class SituationParser {
                     } else if (currentPoint != null && tag.equals("longitude")) {
                         currentPoint.setLongitude(toDouble(parser.nextText()));
 
-                        // ---- Round 3: <value> means different things in different places ----
+                        // ---- <value> means different things in different places ----
                     } else if (current != null && tag.equals("value")) {
                         String text = parser.nextText().trim();
                         if (inComment) {
@@ -85,8 +98,9 @@ public class SituationParser {
                             lastValue = text;   // meaning decided by the type tag that follows
                         }
 
-                        // ---- Round 3: the type tags that say what lastValue was ----
-                    } else if (current != null && currentPoint != null && (tag.equals("tpegOtherPointDescriptorType")
+                        // ---- The type tags that say what lastValue was ----
+                    } else if (current != null && currentPoint != null
+                            && (tag.equals("tpegOtherPointDescriptorType")
                             || tag.equals("tpegIlcPointDescriptorType"))) {
                         String type = parser.nextText();
                         if (type.equals("linkName") || type.equals("tpegIlcName1")) {

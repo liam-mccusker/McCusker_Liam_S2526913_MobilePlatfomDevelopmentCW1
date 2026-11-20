@@ -164,13 +164,21 @@ public class Situation {
         this.urgentRoadworks = urgentRoadworks;
     }
 
-    // Turns e.g. "roadClosed" into "Road closed" for display
+    // Turns e.g. "roadClosed" into "Road closed" for display.
+    // Uses the sub-type if there is one, then the record type (e.g. "Accident"),
+    // and only then the category, so unfamiliar live record types still get a meaningful label.
     public String getDisplayType() {
-        String raw = (subType != null) ? subType : category;
+        String raw = subType;
+        if (raw == null || raw.isEmpty()) {
+            raw = recordType;
+        }
+        if (raw == null || raw.isEmpty()) {
+            raw = category;
+        }
         if (raw == null || raw.isEmpty()) {
             return "Unknown";
         }
-        String spaced = raw.replaceAll("([A-Z])", " $1").toLowerCase();
+        String spaced = raw.replaceAll("([A-Z])", " $1").trim().toLowerCase();
         return Character.toUpperCase(spaced.charAt(0)) + spaced.substring(1);
     }
 
