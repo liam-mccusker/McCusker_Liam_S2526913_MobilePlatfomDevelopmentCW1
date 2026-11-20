@@ -29,6 +29,7 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import org.me.gcu.mccusker_liam_s2526913.ui.SituationListFragment;
 import org.me.gcu.mccusker_liam_s2526913.ui.SituationMapFragment;
@@ -37,6 +38,9 @@ import org.me.gcu.mccusker_liam_s2526913.viewmodel.SituationViewModel;
 public class MainActivity extends AppCompatActivity {
 
     private SituationViewModel viewModel;
+
+    // Matches the order of the "interval_options" list in strings.xml
+    private static final long[] INTERVAL_MINUTES = {1, 15, 30, 60};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,6 +98,12 @@ public class MainActivity extends AppCompatActivity {
         } else if (id == R.id.action_refresh) {
             viewModel.refresh();
             return true;
+        } else if (id == R.id.action_interval) {
+            showIntervalDialog();
+            return true;
+        } else if (id == R.id.action_about) {
+            showAboutDialog();
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -113,5 +123,34 @@ public class MainActivity extends AppCompatActivity {
                     .addToBackStack(null)
                     .commit();
         }
+    }
+
+
+    private void showIntervalDialog() {
+        String[] labels = getResources().getStringArray(R.array.interval_options);
+        long current = viewModel.getUpdateIntervalMinutes();
+        int checked = INTERVAL_MINUTES.length - 1;
+        for (int i = 0; i < INTERVAL_MINUTES.length; i++) {
+            if (INTERVAL_MINUTES[i] == current) {
+                checked = i;
+            }
+        }
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.interval_title)
+                .setSingleChoiceItems(labels, checked, (dialog, which) -> {
+                    viewModel.setUpdateIntervalMinutes(INTERVAL_MINUTES[which]);
+                    dialog.dismiss();
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
+    private void showAboutDialog() {
+        new MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.about_title)
+                .setMessage(R.string.about_message)
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
     }
 }

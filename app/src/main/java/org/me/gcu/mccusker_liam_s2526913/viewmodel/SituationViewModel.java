@@ -18,14 +18,17 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 public class SituationViewModel extends AndroidViewModel {
 
     // How often the data refreshes automatically.
-    // Hourly for normal use; set to 1 temporarily to demonstrate it.
-    private static final long UPDATE_INTERVAL_MINUTES = 60;
+    // Automatic updates are hourly by default; the user can change this from the menu
+    private static final long DEFAULT_UPDATE_INTERVAL_MINUTES = 60;
+    private long updateIntervalMinutes = DEFAULT_UPDATE_INTERVAL_MINUTES;
+    private ScheduledFuture<?> autoUpdate;   // the currently scheduled repeating update
 
     // Fallback for distance search when the device location isn't available
     private static final LocationPoint GCU_CAMPUS =
@@ -58,9 +61,7 @@ public class SituationViewModel extends AndroidViewModel {
         visibleSituations.addSource(maxDistanceMiles, v -> updateVisible());
         visibleSituations.addSource(referenceLocation, v -> updateVisible());
 
-        // Load now (delay 0), then repeat every UPDATE_INTERVAL_MINUTES
-        scheduler.scheduleWithFixedDelay(repository::refresh,
-                0, UPDATE_INTERVAL_MINUTES, TimeUnit.MINUTES);
+        scheduleUpdates(0);   // load now, then repeat at the update interval
     }
 
     private void updateVisible() {
@@ -155,6 +156,24 @@ public class SituationViewModel extends AndroidViewModel {
         }
         deviceLocationRequested = true;
         return true;
+    }
+
+    // Starts (or restarts) the repeating update with the current interval
+    private void scheduleUpdates(long initialDelayMinutes) {
+        if (autoUpdate != null) {
+            autoUpdate.cancel(false);   // stop the old schedule before starting a new one
+        }
+        autoUpdate = scheduler.scheduleWithFixedDelay(repository::refresh,
+                initialDelayMinutes, updateIntervalMinutes, TimeUnit.MINUTES);
+    }
+
+    public long getUpdateIntervalMinutes() {
+        return updateIntervalMinutes;
+    }
+
+    public void setUpdateIntervalMinutes(long minutes) {
+        updateIntervalMinutes = minutes;
+        scheduleUpdates(minutes);   // next update one new interval from now
     }
 
     public void refresh() {

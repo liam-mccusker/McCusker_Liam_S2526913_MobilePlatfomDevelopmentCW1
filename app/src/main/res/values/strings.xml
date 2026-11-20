@@ -43,4 +43,16 @@
     <string name="legend_short">Delays</string>
     <string name="legend_long">Long delays</string>
     <string name="legend_very_long">Very long delays</string>
+
+    <string name="menu_interval">Set update interval</string>
+    <string name="menu_about">About and data source</string>
+    <string name="interval_title">Update automatically</string>
+    <string-array name="interval_options">
+        <item>Every minute (demonstration)</item>
+        <item>Every 15 minutes</item>
+        <item>Every 30 minutes</item>
+        <item>Every hour (default)</item>
+    </string-array>
+    <string name="about_title">About Scottish Road Situations</string>
+    <string name="about_message">Mobile Platform Development Coursework 1\nLiam McCusker (S2526913), Glasgow Caledonian University\n\nData: Contains Traffic Scotland data, from the DATEX II Unplanned Events and Current Roadworks feeds.\n\nMap: Google Maps.\n\nIcons: Google Material Icons, Apache License 2.0.</string>
 </resources>
