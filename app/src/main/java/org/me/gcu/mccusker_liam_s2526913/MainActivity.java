@@ -1,4 +1,4 @@
-/*  Mobile Platform Development - Coursework 1 (26/27)
+/*  Mobile Platform Development - Coursework 1
     Scottish Road Situations: shows Traffic Scotland unplanned events and
     current roadworks from the DATEX II feeds.
     MainActivity is the single Activity. It hosts the fragments (list, details, map)

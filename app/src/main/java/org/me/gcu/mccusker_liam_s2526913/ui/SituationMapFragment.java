@@ -25,6 +25,7 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.MapColorScheme;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -74,6 +75,7 @@ public class SituationMapFragment extends Fragment implements OnMapReadyCallback
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
         map = googleMap;
+        map.setMapColorScheme(MapColorScheme.FOLLOW_SYSTEM);   // dark map in dark mode
         map.getUiSettings().setZoomControlsEnabled(true);
 
         if (fitCameraToData) {
