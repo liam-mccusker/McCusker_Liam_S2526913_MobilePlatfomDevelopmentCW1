@@ -22,6 +22,10 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
+
 public class SituationViewModel extends AndroidViewModel {
 
     // How often the data refreshes automatically.
@@ -47,6 +51,9 @@ public class SituationViewModel extends AndroidViewModel {
     // The list the screen shows, rebuilt whenever the data or any search option changes
     private final MediatorLiveData<List<Situation>> visibleSituations = new MediatorLiveData<>();
 
+    // Road names that currently have situations, for the search suggestions
+    private final MediatorLiveData<List<String>> roadNames = new MediatorLiveData<>();
+
     // So the location permission is only asked for once per session
     private boolean deviceLocationRequested = false;
 
@@ -60,6 +67,9 @@ public class SituationViewModel extends AndroidViewModel {
         visibleSituations.addSource(roadQuery, v -> updateVisible());
         visibleSituations.addSource(maxDistanceMiles, v -> updateVisible());
         visibleSituations.addSource(referenceLocation, v -> updateVisible());
+
+        roadNames.addSource(repository.getIncidents(), v -> updateRoadNames());
+        roadNames.addSource(repository.getRoadworks(), v -> updateRoadNames());
 
         scheduleUpdates(0);   // load now, then repeat at the update interval
     }
@@ -132,6 +142,52 @@ public class SituationViewModel extends AndroidViewModel {
         return text.toUpperCase(Locale.UK).replaceAll("[^A-Z0-9]", "");
     }
 
+    private void updateRoadNames() {
+        Set<String> names = new TreeSet<>(SituationViewModel::compareRoads);
+        addRoadNames(names, repository.getIncidents().getValue());
+        addRoadNames(names, repository.getRoadworks().getValue());
+        roadNames.setValue(new ArrayList<>(names));
+    }
+
+    private static void addRoadNames(Set<String> names, List<Situation> situations) {
+        if (situations == null) {
+            return;
+        }
+        for (Situation s : situations) {
+            if (s.getRoadName() == null) {
+                continue;
+            }
+            for (String part : s.getRoadName().split("/")) {   // e.g. "M90/A90"
+                String name = part.trim();
+                if (!name.isEmpty()) {
+                    names.add(name);
+                }
+            }
+        }
+    }
+
+    // Sorts roads as drivers expect: by letter, then by number (A9 before A82),
+// then alphabetically for anything else (e.g. "A74(M)")
+    private static final Pattern ROAD_PARTS = Pattern.compile("^([A-Za-z]+)(\\d*)(.*)$");
+
+    private static int compareRoads(String a, String b) {
+        Matcher ma = ROAD_PARTS.matcher(a);
+        Matcher mb = ROAD_PARTS.matcher(b);
+        if (ma.matches() && mb.matches()) {
+            int letters = ma.group(1).compareToIgnoreCase(mb.group(1));
+            if (letters != 0) {
+                return letters;
+            }
+            int na = ma.group(2).isEmpty() ? 0 : Integer.parseInt(ma.group(2));
+            int nb = mb.group(2).isEmpty() ? 0 : Integer.parseInt(mb.group(2));
+            if (na != nb) {
+                return Integer.compare(na, nb);
+            }
+        }
+        int text = a.compareToIgnoreCase(b);
+        return (text != 0) ? text : a.compareTo(b);
+    }
+
     public LiveData<List<Situation>> getVisibleSituations() { return visibleSituations; }
     public LiveData<String> getFilter() { return filter; }
     public LiveData<String> getRoadQuery() { return roadQuery; }
@@ -139,6 +195,7 @@ public class SituationViewModel extends AndroidViewModel {
     public LiveData<LocationPoint> getReferenceLocation() { return referenceLocation; }
     public LiveData<Situation> getSelectedSituation() { return selectedSituation; }
     public LiveData<String> getStatus() { return repository.getStatus(); }
+    public LiveData<List<String>> getRoadNames() { return roadNames; }
 
     public void setFilter(String value) { filter.setValue(value); }
     public void setRoadQuery(String value) { roadQuery.setValue(value); }

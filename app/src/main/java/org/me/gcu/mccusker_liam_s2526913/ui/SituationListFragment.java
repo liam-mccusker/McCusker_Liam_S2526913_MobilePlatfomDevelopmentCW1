@@ -35,6 +35,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.button.MaterialButtonToggleGroup;
+import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 
 import org.me.gcu.mccusker_liam_s2526913.R;
 import org.me.gcu.mccusker_liam_s2526913.model.LocationPoint;
@@ -145,7 +146,14 @@ public class SituationListFragment extends Fragment {
     }
 
     private void setUpRoadSearch(View view) {
-        EditText search = view.findViewById(R.id.roadSearch);
+        MaterialAutoCompleteTextView search = view.findViewById(R.id.roadSearch);
+
+        // Suggest roads that currently have situations, from the first letter typed
+        search.setThreshold(1);
+        viewModel.getRoadNames().observe(getViewLifecycleOwner(), names ->
+                search.setAdapter(new ArrayAdapter<>(requireContext(),
+                        android.R.layout.simple_dropdown_item_1line, names)));
+
         search.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -161,17 +169,24 @@ public class SituationListFragment extends Fragment {
             }
         });
 
-        // Pressing the keyboard's search key hides the keyboard so the results are visible
+        // Choosing a suggestion fills the box (which runs the search) and closes the keyboard
+        search.setOnItemClickListener((parent, v, position, id) -> hideKeyboard(search));
+
+        // Pressing the keyboard's search key also closes the keyboard
         search.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                InputMethodManager keyboard =
-                        (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                keyboard.hideSoftInputFromWindow(v.getWindowToken(), 0);
-                v.clearFocus();
+                hideKeyboard(v);
                 return true;
             }
             return false;
         });
+    }
+
+    private void hideKeyboard(View field) {
+        InputMethodManager keyboard =
+                (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        keyboard.hideSoftInputFromWindow(field.getWindowToken(), 0);
+        field.clearFocus();
     }
 
     private void setUpDistanceSpinner(View view) {
