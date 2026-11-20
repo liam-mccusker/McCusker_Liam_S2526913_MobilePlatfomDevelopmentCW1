@@ -10,9 +10,12 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Looper;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -90,6 +93,8 @@ public class SituationListFragment extends Fragment {
         recycler.setAdapter(adapter);
 
         TextView countText = view.findViewById(R.id.listCount);
+        TextView emptyText = view.findViewById(R.id.emptyText);
+
         viewModel.getVisibleSituations().observe(getViewLifecycleOwner(), list -> {
             Integer miles = viewModel.getMaxDistanceMiles().getValue();
             boolean nearSearch = (miles != null && miles > 0);
@@ -106,6 +111,13 @@ public class SituationListFragment extends Fragment {
                 countText.setText(getResources().getQuantityString(R.plurals.list_count,
                         list.size(), list.size()));
             }
+
+            // Empty list: explain why, instead of showing a blank space
+            boolean searching = nearSearch
+                    || !"all".equals(viewModel.getFilter().getValue())
+                    || !TextUtils.isEmpty(viewModel.getRoadQuery().getValue());
+            emptyText.setText(searching ? R.string.empty_search : R.string.empty_none);
+            emptyText.setVisibility(list.isEmpty() ? View.VISIBLE : View.GONE);
         });
     }
 
@@ -147,6 +159,18 @@ public class SituationListFragment extends Fragment {
             public void afterTextChanged(Editable s) {
                 viewModel.setRoadQuery(s.toString());   // list updates as the user types
             }
+        });
+
+        // Pressing the keyboard's search key hides the keyboard so the results are visible
+        search.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                InputMethodManager keyboard =
+                        (InputMethodManager) requireContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                keyboard.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                v.clearFocus();
+                return true;
+            }
+            return false;
         });
     }
 

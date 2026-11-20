@@ -55,4 +55,7 @@
     </string-array>
     <string name="about_title">About Scottish Road Situations</string>
     <string name="about_message">Mobile Platform Development Coursework 1\nLiam McCusker (S2526913), Glasgow Caledonian University\n\nData: Contains Traffic Scotland data, from the DATEX II Unplanned Events and Current Roadworks feeds.\n\nMap: Google Maps.\n\nIcons: Google Material Icons, Apache License 2.0.</string>
+
+    <string name="empty_search">No situations match your search.\nTry another road, a larger distance or the All filter.</string>
+    <string name="empty_none">No situations to show yet.</string>
 </resources>
