@@ -8,7 +8,15 @@ public class LocationPoint {
     private double longitude;
     private String name;   // e.g. a junction name or description
 
+    // Used by the parser, which fills in the fields one at a time
     public LocationPoint() {
+    }
+
+    // Used to create a complete point in one line (e.g. GCU campus, device location)
+    public LocationPoint(double latitude, double longitude, String name) {
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.name = name;
     }
 
     public double getLatitude() {

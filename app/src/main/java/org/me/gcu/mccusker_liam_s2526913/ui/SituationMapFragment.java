@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
@@ -21,11 +22,13 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.maps.model.RoundCap;
 
 import org.me.gcu.mccusker_liam_s2526913.R;
 import org.me.gcu.mccusker_liam_s2526913.model.LocationPoint;
@@ -94,6 +97,14 @@ public class SituationMapFragment extends Fragment implements OnMapReadyCallback
         }
         map.clear();
 
+        // During a distance search, work out where it's measured from
+        LatLng centre = null;
+        Integer miles = viewModel.getMaxDistanceMiles().getValue();
+        LocationPoint reference = viewModel.getReferenceLocation().getValue();
+        if (miles != null && miles > 0 && reference != null) {
+            centre = new LatLng(reference.getLatitude(), reference.getLongitude());
+        }
+
         LatLngBounds.Builder bounds = new LatLngBounds.Builder();
         LatLng lastPosition = null;
         int shown = 0;
@@ -101,7 +112,14 @@ public class SituationMapFragment extends Fragment implements OnMapReadyCallback
         for (Situation s : situations) {
             LatLng from = toLatLng(s.getFrom());
             LatLng to = toLatLng(s.getTo());
+
+            // Normally the marker goes at the start of the stretch; during a distance
+            // search it goes at the end nearest the search centre (the same end the
+            // filter measured), so it sits inside the search circle
             LatLng position = (from != null) ? from : to;
+            if (centre != null && from != null && to != null) {
+                position = (metresBetween(centre, to) < metresBetween(centre, from)) ? to : from;
+            }
             if (position == null) {
                 continue;   // no usable location, so it can't go on the map
             }
@@ -117,12 +135,16 @@ public class SituationMapFragment extends Fragment implements OnMapReadyCallback
             }
             bounds.include(position);
 
-            // Line along the affected stretch of road
-            if (from != null && to != null) {
+            // Line along the affected stretch of road (not shown during a distance search,
+            // so the map only shows what's inside the search circle)
+            if (from != null && to != null && centre == null) {
                 map.addPolyline(new PolylineOptions()
                         .add(from, to)
                         .width(10f)
-                        .color(lineColour(s)));
+                        .color(lineColour(s))
+                        .startCap(new RoundCap())
+                        .endCap(new RoundCap()));
+                bounds.include(from);
                 bounds.include(to);
             }
 
@@ -130,17 +152,41 @@ public class SituationMapFragment extends Fragment implements OnMapReadyCallback
             shown++;
         }
 
+        // Show the search centre and radius
+        if (centre != null) {
+            map.addMarker(new MarkerOptions()
+                    .position(centre)
+                    .title("Searching from " + reference.getName())
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+            map.addCircle(new CircleOptions()
+                    .center(centre)
+                    .radius(miles * 1609.344)          // miles to metres
+                    .strokeColor(Color.argb(160, 33, 150, 243))
+                    .strokeWidth(4f)
+                    .fillColor(Color.argb(30, 33, 150, 243)));
+            bounds.include(centre);
+        }
+
         // getQuantityString picks "situation" or "situations" based on the number
         countText.setText(getResources().getQuantityString(R.plurals.map_count, shown, shown));
 
-        if (fitCameraToData && shown > 0) {
+        if (fitCameraToData && (shown > 0 || centre != null)) {
             fitCameraToData = false;
-            if (shown == 1) {
+            if (shown == 0) {
+                map.moveCamera(CameraUpdateFactory.newLatLngZoom(centre, 10f));
+            } else if (shown == 1 && centre == null) {
                 map.moveCamera(CameraUpdateFactory.newLatLngZoom(lastPosition, 13f));
             } else {
                 fitCamera(bounds.build());
             }
         }
+    }
+
+    // Straight-line distance in metres between two map points
+    private float metresBetween(LatLng a, LatLng b) {
+        float[] result = new float[1];
+        Location.distanceBetween(a.latitude, a.longitude, b.latitude, b.longitude, result);
+        return result[0];
     }
 
     private void fitCamera(LatLngBounds bounds) {

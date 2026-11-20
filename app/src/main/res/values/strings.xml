@@ -17,6 +17,8 @@
         <item quantity="other">Showing %1$d situations within %2$d mi of %3$s</item>
     </plurals>
 
+    <string name="location_unavailable">Location not available, so distances are from GCU campus</string>
+
     <plurals name="map_count">
         <item quantity="one">%1$d situation on map · tap a marker for details</item>
         <item quantity="other">%1$d situations on map · tap a marker for details</item>

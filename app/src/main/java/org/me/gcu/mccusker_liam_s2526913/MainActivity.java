@@ -8,7 +8,7 @@
 //
 // Name                 Liam McCusker
 // Student ID           S2526913
-// Programme of Study   _________________
+// Programme of Study   Software Development - Mobile Platform Development
 //
 
 package org.me.gcu.mccusker_liam_s2526913;

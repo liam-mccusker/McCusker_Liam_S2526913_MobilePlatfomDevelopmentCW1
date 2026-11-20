@@ -10,6 +10,7 @@ import androidx.lifecycle.MutableLiveData;
 
 import org.me.gcu.mccusker_liam_s2526913.data.DistanceUtils;
 import org.me.gcu.mccusker_liam_s2526913.data.SituationRepository;
+import org.me.gcu.mccusker_liam_s2526913.model.LocationPoint;
 import org.me.gcu.mccusker_liam_s2526913.model.Situation;
 
 import java.util.ArrayList;
@@ -22,13 +23,13 @@ import java.util.regex.Pattern;
 
 public class SituationViewModel extends AndroidViewModel {
 
-    // Reference point for distance search: GCU campus, Cowcaddens Road, Glasgow
-    public static final double HOME_LAT = 55.8666;
-    public static final double HOME_LON = -4.2504;
-
     // How often the data refreshes automatically.
     // Hourly for normal use; set to 1 temporarily to demonstrate it.
     private static final long UPDATE_INTERVAL_MINUTES = 60;
+
+    // Fallback for distance search when the device location isn't available
+    private static final LocationPoint GCU_CAMPUS =
+            new LocationPoint(55.8666, -4.2504, "GCU campus");
 
     private final SituationRepository repository;
     private final ScheduledExecutorService scheduler =
@@ -37,10 +38,14 @@ public class SituationViewModel extends AndroidViewModel {
     private final MutableLiveData<String> filter = new MutableLiveData<>("all");   // all / incident / roadworks
     private final MutableLiveData<String> roadQuery = new MutableLiveData<>("");
     private final MutableLiveData<Integer> maxDistanceMiles = new MutableLiveData<>(0); // 0 = any distance
+    private final MutableLiveData<LocationPoint> referenceLocation = new MutableLiveData<>(GCU_CAMPUS);
     private final MutableLiveData<Situation> selectedSituation = new MutableLiveData<>();
 
     // The list the screen shows, rebuilt whenever the data or any search option changes
     private final MediatorLiveData<List<Situation>> visibleSituations = new MediatorLiveData<>();
+
+    // So the location permission is only asked for once per session
+    private boolean deviceLocationRequested = false;
 
     public SituationViewModel(@NonNull Application application) {
         super(application);
@@ -51,6 +56,7 @@ public class SituationViewModel extends AndroidViewModel {
         visibleSituations.addSource(filter, v -> updateVisible());
         visibleSituations.addSource(roadQuery, v -> updateVisible());
         visibleSituations.addSource(maxDistanceMiles, v -> updateVisible());
+        visibleSituations.addSource(referenceLocation, v -> updateVisible());
 
         // Load now (delay 0), then repeat every UPDATE_INTERVAL_MINUTES
         scheduler.scheduleWithFixedDelay(repository::refresh,
@@ -61,6 +67,7 @@ public class SituationViewModel extends AndroidViewModel {
         String f = filter.getValue();
         String query = (roadQuery.getValue() == null) ? "" : roadQuery.getValue().trim();
         int maxMiles = (maxDistanceMiles.getValue() == null) ? 0 : maxDistanceMiles.getValue();
+        LocationPoint ref = referenceLocation.getValue();
 
         // 1. Category filter
         List<Situation> candidates = new ArrayList<>();
@@ -85,7 +92,7 @@ public class SituationViewModel extends AndroidViewModel {
                 continue;
             }
             if (maxMiles > 0) {
-                double miles = DistanceUtils.distanceMiles(s, HOME_LAT, HOME_LON);
+                double miles = DistanceUtils.distanceMiles(s, ref.getLatitude(), ref.getLongitude());
                 if (miles < 0 || miles > maxMiles) {
                     continue;
                 }
@@ -96,8 +103,8 @@ public class SituationViewModel extends AndroidViewModel {
         // 3. When searching by distance, show the nearest first
         if (maxMiles > 0) {
             result.sort((a, b) -> Double.compare(
-                    DistanceUtils.distanceMiles(a, HOME_LAT, HOME_LON),
-                    DistanceUtils.distanceMiles(b, HOME_LAT, HOME_LON)));
+                    DistanceUtils.distanceMiles(a, ref.getLatitude(), ref.getLongitude()),
+                    DistanceUtils.distanceMiles(b, ref.getLatitude(), ref.getLongitude())));
         }
 
         visibleSituations.setValue(result);
@@ -128,6 +135,7 @@ public class SituationViewModel extends AndroidViewModel {
     public LiveData<String> getFilter() { return filter; }
     public LiveData<String> getRoadQuery() { return roadQuery; }
     public LiveData<Integer> getMaxDistanceMiles() { return maxDistanceMiles; }
+    public LiveData<LocationPoint> getReferenceLocation() { return referenceLocation; }
     public LiveData<Situation> getSelectedSituation() { return selectedSituation; }
     public LiveData<String> getStatus() { return repository.getStatus(); }
 
@@ -135,6 +143,19 @@ public class SituationViewModel extends AndroidViewModel {
     public void setRoadQuery(String value) { roadQuery.setValue(value); }
     public void setMaxDistanceMiles(int miles) { maxDistanceMiles.setValue(miles); }
     public void selectSituation(Situation situation) { selectedSituation.setValue(situation); }
+
+    public void setDeviceLocation(double latitude, double longitude) {
+        referenceLocation.setValue(new LocationPoint(latitude, longitude, "your location"));
+    }
+
+    // Returns true only the first time, so the user isn't asked repeatedly
+    public boolean shouldRequestDeviceLocation() {
+        if (deviceLocationRequested) {
+            return false;
+        }
+        deviceLocationRequested = true;
+        return true;
+    }
 
     public void refresh() {
         repository.refresh();
