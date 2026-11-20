@@ -45,3 +45,8 @@ dependencies {
 
     implementation("com.google.android.gms:play-services-maps:19.0.0")
 }
+
+secrets {
+    propertiesFileName = "local.properties"
+    defaultPropertiesFileName = "local.defaults.properties"
+}
