@@ -47,6 +47,12 @@ public class SituationRepository {
     private static final String INCIDENTS_CACHE = "incidents_cache.xml";
     private static final String ROADWORKS_CACHE = "roadworks_cache.xml";
 
+    // Saved data older than this is flagged as possibly out of date
+    private static final long STALE_AFTER_HOURS = 24;
+
+    // True once anything is on screen (used only on the background thread)
+    private boolean shownAnyData = false;
+
     private final Context context;
     private final String clientId;
     private final String clientKey;
@@ -68,9 +74,9 @@ public class SituationRepository {
     public LiveData<String> getStatus() { return status; }
 
     // Loads and parses both feeds on a background thread
+    // Loads and parses both feeds on a background thread
     public void refresh() {
         executor.execute(() -> {
-            status.postValue("Loading…");
 
             if (USE_SAMPLE_DATA) {
                 publish(readAsset("unplannedContentExample.xml"),
@@ -79,35 +85,62 @@ public class SituationRepository {
                 return;
             }
 
+            // 1. On first load, show the saved copy straight away while downloading
+            if (!shownAnyData) {
+                String savedIncidents = readCache(INCIDENTS_CACHE);
+                String savedRoadworks = readCache(ROADWORKS_CACHE);
+                if (savedIncidents != null || savedRoadworks != null) {
+                    publish(savedIncidents, savedRoadworks);
+                    shownAnyData = true;
+                    status.postValue("Showing saved data · checking for updates…");
+                } else {
+                    status.postValue("Loading…");
+                }
+            } else {
+                status.postValue("Updating…");
+            }
+
+            // 2. Download both feeds and save whatever succeeds
             String incidentXml = download(INCIDENTS_URL);
             String roadworksXml = download(ROADWORKS_URL);
-            boolean online = (incidentXml != null && roadworksXml != null);
-
-            // Save fresh downloads; fall back to the saved copy when a download fails
             if (incidentXml != null) {
                 saveCache(INCIDENTS_CACHE, incidentXml);
-            } else {
-                incidentXml = readCache(INCIDENTS_CACHE);
             }
             if (roadworksXml != null) {
                 saveCache(ROADWORKS_CACHE, roadworksXml);
-            } else {
-                roadworksXml = readCache(ROADWORKS_CACHE);
             }
 
-            if (incidentXml == null && roadworksXml == null) {
-                status.postValue("No connection and no saved data. Check your internet connection.");
+            if (incidentXml == null && roadworksXml == null && !shownAnyData) {
+                status.postValue("Can't reach Traffic Scotland and no saved data yet. "
+                        + "Check your connection and tap refresh.");
                 return;
             }
 
-            publish(incidentXml, roadworksXml);
+            // 3. Show fresh data where we have it, saved data otherwise
+            String incidentsToShow = (incidentXml != null) ? incidentXml : readCache(INCIDENTS_CACHE);
+            String roadworksToShow = (roadworksXml != null) ? roadworksXml : readCache(ROADWORKS_CACHE);
+            publish(incidentsToShow, roadworksToShow);
+            shownAnyData = true;
 
-            if (online) {
-                status.postValue("Live data · updated " + now());
-            } else {
-                status.postValue("Offline · showing saved data from " + cacheTime());
-            }
+            status.postValue(buildStatus(incidentXml != null, roadworksXml != null));
         });
+    }
+
+    // Explains exactly what the user is looking at
+    private String buildStatus(boolean incidentsFresh, boolean roadworksFresh) {
+        if (incidentsFresh && roadworksFresh) {
+            return "Live data · updated " + now();
+        }
+        if (!incidentsFresh && !roadworksFresh) {
+            return "Can't reach Traffic Scotland · showing saved data from "
+                    + savedTime(INCIDENTS_CACHE) + staleWarning(INCIDENTS_CACHE);
+        }
+        if (!incidentsFresh) {
+            return "Roadworks updated " + now() + " · incidents saved "
+                    + savedTime(INCIDENTS_CACHE) + staleWarning(INCIDENTS_CACHE);
+        }
+        return "Incidents updated " + now() + " · roadworks saved "
+                + savedTime(ROADWORKS_CACHE) + staleWarning(ROADWORKS_CACHE);
     }
 
     public void shutdown() {
@@ -182,11 +215,23 @@ public class SituationRepository {
         }
     }
 
-    private String cacheTime() {
-        File file = new File(context.getFilesDir(), INCIDENTS_CACHE);
+    private String savedTime(String fileName) {
+        File file = new File(context.getFilesDir(), fileName);
+        if (!file.exists()) {
+            return "unknown";
+        }
         return Instant.ofEpochMilli(file.lastModified())
                 .atZone(ZoneId.systemDefault())
                 .format(DateTimeFormatter.ofPattern("d MMM, HH:mm", Locale.UK));
+    }
+
+    // Warns when saved data is over a day old: roadworks stay valid longer than incidents
+    private String staleWarning(String fileName) {
+        File file = new File(context.getFilesDir(), fileName);
+        long ageHours = (System.currentTimeMillis() - file.lastModified()) / (1000 * 60 * 60);
+        return (file.exists() && ageHours >= STALE_AFTER_HOURS)
+                ? " (over a day old, incidents may have cleared)"
+                : "";
     }
 
     // ---------- Helpers ----------
@@ -212,6 +257,10 @@ public class SituationRepository {
         }
         return sb.toString();
     }
+
+    // get() is deprecated, but getString() returns null if a value looks like a number,
+    // because Android stores numeric-looking metadata as a number
+    @SuppressWarnings("deprecation")
 
     private String readMetaData(String name) {
         try {

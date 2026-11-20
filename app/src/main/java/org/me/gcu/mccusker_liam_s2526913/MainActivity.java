@@ -1,7 +1,8 @@
-/*  Starter project for Mobile Platform Development - 1st diet 26/27
-    You should use this project as the starting point for your assignment.
-    This project simply reads the data from the required source and displays the
-    raw data in a TextField
+/*  Mobile Platform Development - Coursework 1 (26/27)
+    Scottish Road Situations: shows Traffic Scotland unplanned events and
+    current roadworks from the DATEX II feeds.
+    MainActivity is the single Activity. It hosts the fragments (list, details, map)
+    and the toolbar; all data comes from the shared SituationViewModel (MVVM).
 */
 
 //

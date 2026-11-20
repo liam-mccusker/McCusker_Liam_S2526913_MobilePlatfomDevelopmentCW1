@@ -64,16 +64,19 @@ public class SituationListFragment extends Fragment {
 
         TextView countText = view.findViewById(R.id.listCount);
         viewModel.getVisibleSituations().observe(getViewLifecycleOwner(), list -> {
-            Integer km = viewModel.getMaxDistanceMiles().getValue();
-            boolean nearSearch = (km != null && km > 0);
+            Integer miles = viewModel.getMaxDistanceMiles().getValue();
+            boolean nearSearch = (miles != null && miles > 0);
 
             adapter.setShowDistance(nearSearch);
             adapter.setSituations(list);
 
+            // getQuantityString picks "situation" or "situations" based on the number
             if (nearSearch) {
-                countText.setText(getString(R.string.list_count_near, list.size(), km));
+                countText.setText(getResources().getQuantityString(R.plurals.list_count_near,
+                        list.size(), list.size(), miles, "GCU campus"));
             } else {
-                countText.setText(getString(R.string.list_count, list.size()));
+                countText.setText(getResources().getQuantityString(R.plurals.list_count,
+                        list.size(), list.size()));
             }
         });
     }
@@ -127,9 +130,9 @@ public class SituationListFragment extends Fragment {
         spinner.setAdapter(options);
 
         // Show the saved choice (e.g. after rotation or coming back from details)
-        Integer currentKm = viewModel.getMaxDistanceMiles().getValue();
+        Integer currentMiles = viewModel.getMaxDistanceMiles().getValue();
         for (int i = 0; i < DISTANCE_MILES.length; i++) {
-            if (currentKm != null && DISTANCE_MILES[i] == currentKm) {
+            if (currentMiles != null && DISTANCE_MILES[i] == currentMiles) {
                 spinner.setSelection(i);
             }
         }

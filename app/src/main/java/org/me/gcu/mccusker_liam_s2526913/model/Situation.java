@@ -1,5 +1,7 @@
 package org.me.gcu.mccusker_liam_s2526913.model;
 
+import androidx.annotation.NonNull;
+
 public class Situation {
 
     // Which feed it came from
@@ -172,6 +174,7 @@ public class Situation {
         return Character.toUpperCase(spaced.charAt(0)) + spaced.substring(1);
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "Situation{" +

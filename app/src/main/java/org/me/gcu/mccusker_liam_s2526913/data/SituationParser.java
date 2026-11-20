@@ -86,7 +86,7 @@ public class SituationParser {
                         }
 
                         // ---- Round 3: the type tags that say what lastValue was ----
-                    } else if (currentPoint != null && (tag.equals("tpegOtherPointDescriptorType")
+                    } else if (current != null && currentPoint != null && (tag.equals("tpegOtherPointDescriptorType")
                             || tag.equals("tpegIlcPointDescriptorType"))) {
                         String type = parser.nextText();
                         if (type.equals("linkName") || type.equals("tpegIlcName1")) {

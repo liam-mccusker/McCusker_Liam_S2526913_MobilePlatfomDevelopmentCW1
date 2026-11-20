@@ -130,7 +130,8 @@ public class SituationMapFragment extends Fragment implements OnMapReadyCallback
             shown++;
         }
 
-        countText.setText(getString(R.string.map_count, shown));
+        // getQuantityString picks "situation" or "situations" based on the number
+        countText.setText(getResources().getQuantityString(R.plurals.map_count, shown, shown));
 
         if (fitCameraToData && shown > 0) {
             fitCameraToData = false;

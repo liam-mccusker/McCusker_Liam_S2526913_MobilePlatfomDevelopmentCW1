@@ -5,10 +5,22 @@
     <string name="filter_all">All</string>
     <string name="filter_incidents">Incidents</string>
     <string name="filter_roadworks">Roadworks</string>
-    <string name="list_count">Showing %1$d situations</string>
 
     <string name="road_search_hint">Search road, e.g. M8</string>
-    <string name="list_count_near">Showing %1$d situations within %2$d mi of GCU campus</string>
+
+    <plurals name="list_count">
+        <item quantity="one">Showing %1$d situation</item>
+        <item quantity="other">Showing %1$d situations</item>
+    </plurals>
+    <plurals name="list_count_near">
+        <item quantity="one">Showing %1$d situation within %2$d mi of %3$s</item>
+        <item quantity="other">Showing %1$d situations within %2$d mi of %3$s</item>
+    </plurals>
+
+    <plurals name="map_count">
+        <item quantity="one">%1$d situation on map · tap a marker for details</item>
+        <item quantity="other">%1$d situations on map · tap a marker for details</item>
+    </plurals>
 
     <string-array name="distance_options">
         <item>Any distance</item>
@@ -22,7 +34,6 @@
     <string name="refresh">Refresh data</string>
 
     <string name="show_map">Show map</string>
-    <string name="map_count">%1$d situations on map · tap a marker for details</string>
 
     <string name="app_title">Scottish Road Situations</string>
     <string name="legend_title">Roadworks delays</string>

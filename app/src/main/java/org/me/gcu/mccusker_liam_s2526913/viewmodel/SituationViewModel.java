@@ -28,7 +28,7 @@ public class SituationViewModel extends AndroidViewModel {
 
     // How often the data refreshes automatically.
     // Hourly for normal use; set to 1 temporarily to demonstrate it.
-    private static final long UPDATE_INTERVAL_MINUTES = 1;
+    private static final long UPDATE_INTERVAL_MINUTES = 60;
 
     private final SituationRepository repository;
     private final ScheduledExecutorService scheduler =

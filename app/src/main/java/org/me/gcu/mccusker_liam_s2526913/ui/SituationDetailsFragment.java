@@ -15,7 +15,6 @@ import androidx.lifecycle.ViewModelProvider;
 
 import org.me.gcu.mccusker_liam_s2526913.R;
 import org.me.gcu.mccusker_liam_s2526913.model.LocationPoint;
-import org.me.gcu.mccusker_liam_s2526913.model.Situation;
 import org.me.gcu.mccusker_liam_s2526913.viewmodel.SituationViewModel;
 
 import java.util.Locale;

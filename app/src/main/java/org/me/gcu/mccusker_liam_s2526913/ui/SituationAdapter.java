@@ -92,7 +92,7 @@ public class SituationAdapter extends RecyclerView.Adapter<SituationAdapter.View
         return situations.size();
     }
 
-    static class ViewHolder extends RecyclerView.ViewHolder {
+    public static class ViewHolder extends RecyclerView.ViewHolder {
         final ImageView icon;
         final TextView type;
         final TextView description;

@@ -1,5 +1,7 @@
 package org.me.gcu.mccusker_liam_s2526913.model;
 
+import androidx.annotation.NonNull;
+
 public class LocationPoint {
 
     private double latitude;
@@ -33,6 +35,7 @@ public class LocationPoint {
         this.name = name;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "LocationPoint{" +
