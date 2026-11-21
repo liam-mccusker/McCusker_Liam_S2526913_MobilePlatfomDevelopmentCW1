@@ -128,7 +128,7 @@ public class SituationViewModel extends AndroidViewModel {
         String q = normalise(query);
         if (s.getRoadName() != null) {
             for (String part : s.getRoadName().split("/")) {   // e.g. "M90/A90"
-                if (normalise(part).equals(q)) {
+                if (normalise(part).equals(q) || normalise(roadNumber(part)).equals(q)) {
                     return true;
                 }
             }
@@ -158,7 +158,7 @@ public class SituationViewModel extends AndroidViewModel {
                 continue;
             }
             for (String part : s.getRoadName().split("/")) {   // e.g. "M90/A90"
-                String name = part.trim();
+                String name = roadNumber(part);
                 if (!name.isEmpty()) {
                     names.add(name);
                 }
@@ -186,6 +186,17 @@ public class SituationViewModel extends AndroidViewModel {
         }
         int text = a.compareToIgnoreCase(b);
         return (text != 0) ? text : a.compareTo(b);
+    }
+
+    // Pulls the road number out of a feed road name:
+    // "A726 (West Mains Road)" -> "A726", "M8MONKLANDS" -> "M8", "a74(m)" -> "A74(M)".
+    // Names without a road number (e.g. a bridge name) are returned unchanged.
+    private static final Pattern ROAD_NUMBER = Pattern.compile("^([A-Za-z]{1,2}\\d+(\\([A-Za-z]\\))?)");
+
+    public static String roadNumber(String name) {
+        String trimmed = name.trim();
+        Matcher m = ROAD_NUMBER.matcher(trimmed);
+        return m.find() ? m.group(1).toUpperCase(Locale.UK) : trimmed;
     }
 
     public LiveData<List<Situation>> getVisibleSituations() { return visibleSituations; }
