@@ -117,7 +117,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void showMap() {
         Fragment current = getSupportFragmentManager().findFragmentById(R.id.fragmentContainer);
-        if (!(current instanceof SituationMapFragment)) {   // don't open the map twice
+        // Open the full map unless it's already showing (a single-situation map doesn't count)
+        boolean fullMapShowing = current instanceof SituationMapFragment
+                && !((SituationMapFragment) current).isSingleMode();
+        if (!fullMapShowing) {
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.fragmentContainer, new SituationMapFragment())
                     .addToBackStack(null)

@@ -58,4 +58,7 @@
 
     <string name="empty_search">No situations match your search.\nTry another road, a larger distance or the All filter.</string>
     <string name="empty_none">No situations to show yet.</string>
+
+    <string name="show_on_map">Show on map</string>
+    <string name="map_single">Showing the selected situation</string>
 </resources>

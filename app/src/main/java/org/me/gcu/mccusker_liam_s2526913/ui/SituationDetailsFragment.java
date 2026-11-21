@@ -4,6 +4,7 @@ import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -40,6 +41,13 @@ public class SituationDetailsFragment extends Fragment {
         rows = view.findViewById(R.id.detailRows);
         ImageView icon = view.findViewById(R.id.detailIcon);
 
+        // Opens the map showing just this situation
+        Button showOnMap = view.findViewById(R.id.showOnMapButton);
+        showOnMap.setOnClickListener(v -> getParentFragmentManager().beginTransaction()
+                .replace(R.id.fragmentContainer, SituationMapFragment.forSelectedSituation())
+                .addToBackStack(null)
+                .commit());
+
         viewModel.getSelectedSituation().observe(getViewLifecycleOwner(), s -> {
             if (s == null) {
                 return;
@@ -48,6 +56,10 @@ public class SituationDetailsFragment extends Fragment {
             icon.setImageResource(SituationStyle.iconFor(s));
             category.setText("roadworks".equals(s.getCategory()) ? "Roadworks" : "Incident");
             description.setText(s.getDescription());
+
+            // Only offer the map if the situation has somewhere to show
+            showOnMap.setVisibility((s.getFrom() != null || s.getTo() != null)
+                    ? View.VISIBLE : View.GONE);
 
             rows.removeAllViews();
 

@@ -36,6 +36,7 @@ import org.me.gcu.mccusker_liam_s2526913.model.LocationPoint;
 import org.me.gcu.mccusker_liam_s2526913.model.Situation;
 import org.me.gcu.mccusker_liam_s2526913.viewmodel.SituationViewModel;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,11 +44,22 @@ import java.util.Map;
 public class SituationMapFragment extends Fragment implements OnMapReadyCallback {
 
     private static final LatLng SCOTLAND = new LatLng(56.8, -4.2);
+    private static final String ARG_SINGLE = "single";
+
+    // Map for just the situation selected on the details screen
+    public static SituationMapFragment forSelectedSituation() {
+        SituationMapFragment fragment = new SituationMapFragment();
+        Bundle args = new Bundle();
+        args.putBoolean(ARG_SINGLE, true);
+        fragment.setArguments(args);
+        return fragment;
+    }
 
     private SituationViewModel viewModel;
     private GoogleMap map;
     private TextView countText;
     private boolean fitCameraToData;   // only zoom to the data when the map first opens
+    private boolean singleMode;        // true = show only the selected situation
 
     // Marker images are made once per icon type and reused
     private final Map<Integer, BitmapDescriptor> markerIcons = new HashMap<>();
@@ -56,11 +68,16 @@ public class SituationMapFragment extends Fragment implements OnMapReadyCallback
         super(R.layout.fragment_situation_map);
     }
 
+    public boolean isSingleMode() {
+        return singleMode;
+    }
+
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         viewModel = new ViewModelProvider(requireActivity()).get(SituationViewModel.class);
         countText = view.findViewById(R.id.mapCount);
+        singleMode = getArguments() != null && getArguments().getBoolean(ARG_SINGLE);
 
         // After rotation the map remembers its own position, so don't move it again
         fitCameraToData = (savedInstanceState == null);
@@ -82,15 +99,20 @@ public class SituationMapFragment extends Fragment implements OnMapReadyCallback
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(SCOTLAND, 6f));
         }
 
-        // Tapping a marker's popup opens that situation's details
-        map.setOnInfoWindowClickListener(marker -> {
-            Object tag = marker.getTag();
-            if (tag instanceof Situation) {
-                openDetails((Situation) tag);
-            }
-        });
-
-        viewModel.getVisibleSituations().observe(getViewLifecycleOwner(), this::showSituations);
+        if (singleMode) {
+            // Show just the selected situation (its popup doesn't reopen details: back does that)
+            viewModel.getSelectedSituation().observe(getViewLifecycleOwner(), s ->
+                    showSituations(s == null ? Collections.emptyList() : Collections.singletonList(s)));
+        } else {
+            // Tapping a marker's popup opens that situation's details
+            map.setOnInfoWindowClickListener(marker -> {
+                Object tag = marker.getTag();
+                if (tag instanceof Situation) {
+                    openDetails((Situation) tag);
+                }
+            });
+            viewModel.getVisibleSituations().observe(getViewLifecycleOwner(), this::showSituations);
+        }
     }
 
     private void showSituations(List<Situation> situations) {
@@ -99,16 +121,17 @@ public class SituationMapFragment extends Fragment implements OnMapReadyCallback
         }
         map.clear();
 
-        // During a distance search, work out where it's measured from
+        // During a distance search on the full map, work out where it's measured from
         LatLng centre = null;
         Integer miles = viewModel.getMaxDistanceMiles().getValue();
         LocationPoint reference = viewModel.getReferenceLocation().getValue();
-        if (miles != null && miles > 0 && reference != null) {
+        if (!singleMode && miles != null && miles > 0 && reference != null) {
             centre = new LatLng(reference.getLatitude(), reference.getLongitude());
         }
 
         LatLngBounds.Builder bounds = new LatLngBounds.Builder();
         LatLng lastPosition = null;
+        boolean anyLine = false;
         int shown = 0;
 
         for (Situation s : situations) {
@@ -140,6 +163,7 @@ public class SituationMapFragment extends Fragment implements OnMapReadyCallback
             // Line along the affected stretch of road (not shown during a distance search,
             // so the map only shows what's inside the search circle)
             if (from != null && to != null && centre == null) {
+                anyLine = true;
                 map.addPolyline(new PolylineOptions()
                         .add(from, to)
                         .width(10f)
@@ -169,16 +193,22 @@ public class SituationMapFragment extends Fragment implements OnMapReadyCallback
             bounds.include(centre);
         }
 
-        // getQuantityString picks "situation" or "situations" based on the number
-        countText.setText(getResources().getQuantityString(R.plurals.map_count, shown, shown));
+        if (singleMode) {
+            countText.setText(R.string.map_single);
+        } else {
+            // getQuantityString picks "situation" or "situations" based on the number
+            countText.setText(getResources().getQuantityString(R.plurals.map_count, shown, shown));
+        }
 
         if (fitCameraToData && (shown > 0 || centre != null)) {
             fitCameraToData = false;
             if (shown == 0) {
                 map.moveCamera(CameraUpdateFactory.newLatLngZoom(centre, 10f));
-            } else if (shown == 1 && centre == null) {
+            } else if (shown == 1 && centre == null && !anyLine) {
+                // A single point with no line: zoom in on it
                 map.moveCamera(CameraUpdateFactory.newLatLngZoom(lastPosition, 13f));
             } else {
+                // Several situations, or one with a line: fit everything on screen
                 fitCamera(bounds.build());
             }
         }
