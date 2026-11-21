@@ -52,8 +52,10 @@ public class SituationDetailsFragment extends Fragment {
             rows.removeAllViews();
 
             addHeader("When");
-            addRow("Starts", DisplayFormat.dateTime(s.getStartTime()));
-            addRow("Ends", DisplayFormat.dateTime(s.getEndTime()));
+            addRow("Starts", withNote(DisplayFormat.dateTime(s.getStartTime()),
+                    DisplayFormat.startStatus(s.getStartTime())));
+            addRow("Ends", withNote(DisplayFormat.dateTime(s.getEndTime()),
+                    DisplayFormat.endStatus(s.getEndTime())));
 
             addHeader("Impact");
             addRow("Delays", DisplayFormat.readable(s.getDelaysType()));
@@ -108,6 +110,14 @@ public class SituationDetailsFragment extends Fragment {
         if ("true".equals(value)) return "Yes";
         if ("false".equals(value)) return "No";
         return null;
+    }
+
+    // Puts a short note (e.g. "Ends in 3 days") on the line below a date
+    private String withNote(String main, String note) {
+        if (main == null) {
+            return null;
+        }
+        return (note == null) ? main : main + "\n" + note;
     }
 
     private int dp(int value) {
