@@ -14,9 +14,10 @@ add these lines to `local.properties` (no quotes, no spaces):
     TS_CLIENT_ID=your-traffic-scotland-client-id
     TS_CLIENT_KEY=your-traffic-scotland-client-key
 
-Without them the project still builds (placeholder values come from
-`local.defaults.properties`), but the map and live download will not work.
-The submitted .apk was built with working keys.
+Without them the project still builds and runs: `local.defaults.properties`
+supplies placeholder (non-working) values so the build succeeds. The app then
+shows "No Traffic Scotland API credentials in this build" and the map is blank.
+The submitted .apk was built with working keys, so it shows live data and maps.
 
 ## Icons
 Google Material Icons, added through Android Studio's Vector Asset tool.

@@ -63,6 +63,13 @@ public class SituationRepository {
     private final MutableLiveData<List<Situation>> roadworks = new MutableLiveData<>();
     private final MutableLiveData<String> status = new MutableLiveData<>();
 
+    // True if real Traffic Scotland credentials were built in (not the placeholders
+    // from local.defaults.properties used when the project is cloned without keys)
+    private boolean hasCredentials() {
+        return !clientId.isEmpty() && !clientKey.isEmpty()
+                && !clientId.startsWith("DEFAULT_") && !clientKey.startsWith("DEFAULT_");
+    }
+
     public SituationRepository(Context context) {
         this.context = context.getApplicationContext();
         clientId = readMetaData("TS_CLIENT_ID");
@@ -82,6 +89,13 @@ public class SituationRepository {
                 publish(readAsset("unplannedContentExample.xml"),
                         readAsset("roadworksContentExample.xml"));
                 status.postValue("Sample data loaded " + now());
+                return;
+            }
+
+            // Cloned without keys: explain what's missing instead of blaming the connection
+            if (!hasCredentials()) {
+                status.postValue("No Traffic Scotland API credentials in this build. "
+                        + "Add them to local.properties (see README.md).");
                 return;
             }
 
